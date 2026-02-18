@@ -4,6 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ $product['name'] }} | موبوتک</title>
+
+  <!-- Bootstrap 5 RTL -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+
+  <!-- Optional: Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
   <style>
     :root{--primary:#ef394e;--primary-dark:#d32f41;--text:#333;--muted:#666;--border:#e8e8e8;--bg:#fafafa;--white:#fff;--radius:14px;--shadow:0 6px 24px rgba(0,0,0,.08)}
     *{box-sizing:border-box}
@@ -29,6 +36,7 @@
     @media (max-width:900px){.layout{grid-template-columns:1fr}}
   </style>
 </head>
+
 <body>
   <header class="header">
     <div class="container">
@@ -45,7 +53,7 @@
         @endforeach
       </nav>
     </div>
-  </header>
+  </nav>
 
   <main class="container">
     <section class="layout">
@@ -62,18 +70,35 @@
       </article>
     </section>
 
-    <section class="related">
-      <h2>محصولات مشابه</h2>
-      <div class="related-grid">
+    <!-- Related Products -->
+    <section class="mt-5">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="h5 mb-0 section-title">محصولات مشابه</h2>
+        <a class="text-decoration-none small" href="{{ route('home') }}">مشاهده همه</a>
+      </div>
+
+      <div class="row g-3">
         @foreach($relatedProducts as $related)
-          <a class="related-card" href="{{ route('products.show', $related['slug']) }}">
-            <img src="{{ $related['image'] }}" alt="{{ $related['name'] }}" />
-            <h3>{{ $related['name'] }}</h3>
-            <p>{{ $related['price'] }} تومان</p>
-          </a>
+          <div class="col-12 col-sm-6 col-lg-3">
+            <a href="{{ route('products.show', $related['slug']) }}" class="text-decoration-none text-dark">
+              <div class="card card-soft h-100">
+                <img src="{{ $related['image'] }}" alt="{{ $related['name'] }}" class="card-img-top"
+                     style="aspect-ratio:4/3; object-fit:cover; border-top-left-radius:1rem; border-top-right-radius:1rem;">
+                <div class="card-body">
+                  <div class="fw-bold mb-2" style="line-height:1.9;">{{ $related['name'] }}</div>
+                  <div class="text-danger fw-black">
+                    {{ $related['price'] }} <span class="text-muted fw-bold">تومان</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
         @endforeach
       </div>
     </section>
+
   </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
