@@ -94,6 +94,26 @@
     .table td{ vertical-align: middle; }
     .table-hover tbody tr:hover{ background: rgba(15,23,42,.03); }
 
+    .admin-tabs .nav-link{
+      color: #374151;
+      border-radius: .9rem;
+      border: 1px solid transparent;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .65rem 1rem;
+    }
+    .admin-tabs .nav-link:hover{
+      color: var(--brand);
+      background: rgba(239,57,78,.07);
+    }
+    .admin-tabs .nav-link.active{
+      color: var(--brand);
+      background: rgba(239,57,78,.12);
+      border-color: rgba(239,57,78,.24);
+    }
+
     /* Topbar */
     .topbar{
       position: sticky;
@@ -137,11 +157,11 @@
       <div class="section-title mb-2">منو</div>
       <nav class="nav flex-column gap-1">
         <a class="nav-link active" href="{{ route('admin.index') }}"><i class="bi bi-grid-1x2"></i> داشبورد</a>
-        <a class="nav-link" href="#section-categories"><i class="bi bi-tags"></i> دسته‌بندی‌ها</a>
-        <a class="nav-link" href="#section-add-product"><i class="bi bi-plus-circle"></i> افزودن محصول</a>
-        <a class="nav-link" href="#section-products"><i class="bi bi-box-seam"></i> لیست محصولات</a>
-        <a class="nav-link" href="#section-add-post"><i class="bi bi-pencil-square"></i> افزودن نوشته</a>
-        <a class="nav-link" href="#section-posts"><i class="bi bi-journal-text"></i> مدیریت نوشته‌ها</a>
+        <a class="nav-link" href="#" data-admin-tab="categories"><i class="bi bi-tags"></i> دسته‌بندی‌ها</a>
+        <a class="nav-link" href="#" data-admin-tab="add-product"><i class="bi bi-plus-circle"></i> افزودن محصول</a>
+        <a class="nav-link" href="#" data-admin-tab="products"><i class="bi bi-box-seam"></i> لیست محصولات</a>
+        <a class="nav-link" href="#" data-admin-tab="add-post"><i class="bi bi-pencil-square"></i> افزودن نوشته</a>
+        <a class="nav-link" href="#" data-admin-tab="posts"><i class="bi bi-journal-text"></i> مدیریت نوشته‌ها</a>
       </nav>
 
       <hr class="my-3">
@@ -171,11 +191,11 @@
       <div class="section-title mb-2">منو</div>
       <nav class="nav flex-column gap-1">
         <a class="nav-link active" href="{{ route('admin.index') }}"><i class="bi bi-grid-1x2"></i> داشبورد</a>
-        <a class="nav-link" href="#section-categories"><i class="bi bi-tags"></i> دسته‌بندی‌ها</a>
-        <a class="nav-link" href="#section-add-product"><i class="bi bi-plus-circle"></i> افزودن محصول</a>
-        <a class="nav-link" href="#section-products"><i class="bi bi-box-seam"></i> لیست محصولات</a>
-        <a class="nav-link" href="#section-add-post"><i class="bi bi-pencil-square"></i> افزودن نوشته</a>
-        <a class="nav-link" href="#section-posts"><i class="bi bi-journal-text"></i> مدیریت نوشته‌ها</a>
+        <a class="nav-link" href="#" data-admin-tab="categories"><i class="bi bi-tags"></i> دسته‌بندی‌ها</a>
+        <a class="nav-link" href="#" data-admin-tab="add-product"><i class="bi bi-plus-circle"></i> افزودن محصول</a>
+        <a class="nav-link" href="#" data-admin-tab="products"><i class="bi bi-box-seam"></i> لیست محصولات</a>
+        <a class="nav-link" href="#" data-admin-tab="add-post"><i class="bi bi-pencil-square"></i> افزودن نوشته</a>
+        <a class="nav-link" href="#" data-admin-tab="posts"><i class="bi bi-journal-text"></i> مدیریت نوشته‌ها</a>
       </nav>
 
       <hr class="my-4">
@@ -292,12 +312,40 @@
         </div>
 
         <!-- Sections -->
-        <div class="row g-4">
+        <section class="app-card">
+          <div class="card-header-lite p-3 p-lg-4 border-0">
+            <ul class="nav admin-tabs flex-nowrap overflow-auto" id="adminSectionTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-categories" data-bs-toggle="tab" data-bs-target="#pane-categories" type="button" role="tab" aria-controls="pane-categories" aria-selected="true">
+                  <i class="bi bi-tags"></i> دسته‌بندی‌ها
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-add-product" data-bs-toggle="tab" data-bs-target="#pane-add-product" type="button" role="tab" aria-controls="pane-add-product" aria-selected="false">
+                  <i class="bi bi-plus-circle"></i> افزودن محصول
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-products" data-bs-toggle="tab" data-bs-target="#pane-products" type="button" role="tab" aria-controls="pane-products" aria-selected="false">
+                  <i class="bi bi-box-seam"></i> لیست محصولات
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-add-post" data-bs-toggle="tab" data-bs-target="#pane-add-post" type="button" role="tab" aria-controls="pane-add-post" aria-selected="false">
+                  <i class="bi bi-pencil-square"></i> افزودن نوشته
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-posts" data-bs-toggle="tab" data-bs-target="#pane-posts" type="button" role="tab" aria-controls="pane-posts" aria-selected="false">
+                  <i class="bi bi-journal-text"></i> مدیریت نوشته‌ها
+                </button>
+              </li>
+            </ul>
+          </div>
 
-          <!-- Categories -->
-          <div class="col-12 col-xl-4" id="section-categories">
-            <section class="app-card">
-              <div class="card-header-lite p-4">
+          <div class="tab-content p-3 p-lg-4" id="adminSectionTabsContent">
+            <div class="tab-pane fade show active" id="pane-categories" role="tabpanel" aria-labelledby="tab-categories" tabindex="0">
+              <div class="card-header-lite p-0 pb-3 mb-3 bg-transparent">
                 <div class="d-flex align-items-center gap-2">
                   <i class="bi bi-tags brand-text fs-5"></i>
                   <div>
@@ -306,27 +354,22 @@
                   </div>
                 </div>
               </div>
-              <div class="p-4">
-                <form method="POST" action="{{ route('admin.categories.update') }}" class="d-grid gap-3">
-                  @csrf
-                  @method('PUT')
-                  <div>
-                    <label for="categories" class="form-label small muted">دسته‌بندی‌ها</label>
-                    <textarea id="categories" name="categories" rows="10" class="form-control rounded-4"
-                              placeholder="مثلاً: گوشی موبایل">{{ old('categories', implode(PHP_EOL, $categories)) }}</textarea>
-                  </div>
-                  <button class="btn btn-brand rounded-4" type="submit">
-                    <i class="bi bi-save me-1"></i> ذخیره دسته‌بندی‌ها
-                  </button>
-                </form>
-              </div>
-            </section>
-          </div>
+              <form method="POST" action="{{ route('admin.categories.update') }}" class="d-grid gap-3">
+                @csrf
+                @method('PUT')
+                <div>
+                  <label for="categories" class="form-label small muted">دسته‌بندی‌ها</label>
+                  <textarea id="categories" name="categories" rows="10" class="form-control rounded-4"
+                            placeholder="مثلاً: گوشی موبایل">{{ old('categories', implode(PHP_EOL, $categories)) }}</textarea>
+                </div>
+                <button class="btn btn-brand rounded-4" type="submit">
+                  <i class="bi bi-save me-1"></i> ذخیره دسته‌بندی‌ها
+                </button>
+              </form>
+            </div>
 
-          <!-- Add Product -->
-          <div class="col-12 col-xl-8" id="section-add-product">
-            <section class="app-card">
-              <div class="card-header-lite p-4">
+            <div class="tab-pane fade" id="pane-add-product" role="tabpanel" aria-labelledby="tab-add-product" tabindex="0">
+              <div class="card-header-lite p-0 pb-3 mb-3 bg-transparent">
                 <div class="d-flex align-items-center gap-2">
                   <i class="bi bi-plus-circle brand-text fs-5"></i>
                   <div>
@@ -336,81 +379,76 @@
                 </div>
               </div>
 
-              <div class="p-4">
-                <form method="POST" action="{{ route('admin.products.store') }}" class="row g-3">
-                  @csrf
+              <form method="POST" action="{{ route('admin.products.store') }}" class="row g-3">
+                @csrf
 
-                  <div class="col-12 col-md-6">
-                    <label class="form-label">نام محصول</label>
-                    <input class="form-control rounded-4" name="name" value="{{ old('name') }}" required>
-                  </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">نام محصول</label>
+                  <input class="form-control rounded-4" name="name" value="{{ old('name') }}" required>
+                </div>
 
-                  <div class="col-12 col-md-6">
-                    <label class="form-label">برند</label>
-                    <input class="form-control rounded-4" name="brand" value="{{ old('brand') }}" required>
-                  </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">برند</label>
+                  <input class="form-control rounded-4" name="brand" value="{{ old('brand') }}" required>
+                </div>
 
-                  <div class="col-12 col-md-6">
-                    <label class="form-label">دسته‌بندی</label>
-                    <input class="form-control rounded-4" list="admin-categories" name="category" value="{{ old('category') }}" required>
-                    <datalist id="admin-categories">
-                      @foreach($categories as $category)
-                        <option value="{{ $category }}"></option>
-                      @endforeach
-                    </datalist>
-                  </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">دسته‌بندی</label>
+                  <input class="form-control rounded-4" list="admin-categories" name="category" value="{{ old('category') }}" required>
+                  <datalist id="admin-categories">
+                    @foreach($categories as $category)
+                      <option value="{{ $category }}"></option>
+                    @endforeach
+                  </datalist>
+                </div>
 
-                  <div class="col-12 col-md-6">
-                    <label class="form-label">نشانک</label>
-                    <input class="form-control rounded-4" name="badge" value="{{ old('badge') }}" required placeholder="مثلاً: پرفروش">
-                  </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">نشانک</label>
+                  <input class="form-control rounded-4" name="badge" value="{{ old('badge') }}" required placeholder="مثلاً: پرفروش">
+                </div>
 
-                  <div class="col-12 col-md-6">
-                    <label class="form-label">قیمت</label>
-                    <input class="form-control rounded-4" name="price" value="{{ old('price') }}" required placeholder="مثلاً: 12,500,000">
-                  </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">قیمت</label>
+                  <input class="form-control rounded-4" name="price" value="{{ old('price') }}" required placeholder="مثلاً: 12,500,000">
+                </div>
 
-                  <div class="col-12 col-md-6">
-                    <label class="form-label">قیمت قبل (اختیاری)</label>
-                    <input class="form-control rounded-4" name="old_price" value="{{ old('old_price') }}" placeholder="مثلاً: 13,900,000">
-                  </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">قیمت قبل (اختیاری)</label>
+                  <input class="form-control rounded-4" name="old_price" value="{{ old('old_price') }}" placeholder="مثلاً: 13,900,000">
+                </div>
 
-                  <div class="col-12">
-                    <label class="form-label">آدرس تصویر</label>
-                    <input class="form-control rounded-4" name="image" value="{{ old('image') }}" required placeholder="https://...">
-                  </div>
+                <div class="col-12">
+                  <label class="form-label">آدرس تصویر</label>
+                  <input class="form-control rounded-4" name="image" value="{{ old('image') }}" required placeholder="https://...">
+                </div>
 
-                  <div class="col-12">
-                    <label class="form-label">توضیحات</label>
-                    <textarea class="form-control rounded-4" name="description" rows="3" required>{{ old('description') }}</textarea>
-                  </div>
+                <div class="col-12">
+                  <label class="form-label">توضیحات</label>
+                  <textarea class="form-control rounded-4" name="description" rows="3" required>{{ old('description') }}</textarea>
+                </div>
 
-                  <div class="col-12">
-                    <label class="form-label">مشخصات (هر مورد در یک خط)</label>
-                    <textarea class="form-control rounded-4" name="specs" rows="4" required
-                              placeholder="مثلاً:
+                <div class="col-12">
+                  <label class="form-label">مشخصات (هر مورد در یک خط)</label>
+                  <textarea class="form-control rounded-4" name="specs" rows="4" required
+                            placeholder="مثلاً:
 حافظه 256 گیگ
 رم 8 گیگ
 باتری 5000mAh">{{ old('specs') }}</textarea>
-                  </div>
+                </div>
 
-                  <div class="col-12 d-flex gap-2 flex-wrap">
-                    <button class="btn btn-brand rounded-4" type="submit">
-                      <i class="bi bi-check2-circle me-1"></i> افزودن محصول
-                    </button>
-                    <button class="btn btn-outline-secondary rounded-4" type="reset">
-                      <i class="bi bi-arrow-counterclockwise me-1"></i> پاک کردن فرم
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </section>
-          </div>
+                <div class="col-12 d-flex gap-2 flex-wrap">
+                  <button class="btn btn-brand rounded-4" type="submit">
+                    <i class="bi bi-check2-circle me-1"></i> افزودن محصول
+                  </button>
+                  <button class="btn btn-outline-secondary rounded-4" type="reset">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> پاک کردن فرم
+                  </button>
+                </div>
+              </form>
+            </div>
 
-          <!-- Products List -->
-          <div class="col-12" id="section-products">
-            <section class="app-card">
-              <div class="card-header-lite p-4">
+            <div class="tab-pane fade" id="pane-products" role="tabpanel" aria-labelledby="tab-products" tabindex="0">
+              <div class="card-header-lite p-0 pb-3 mb-3 bg-transparent">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                   <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-box-seam brand-text fs-5"></i>
@@ -461,13 +499,10 @@
                   </tbody>
                 </table>
               </div>
-            </section>
-          </div>
+            </div>
 
-          <!-- Add Post -->
-          <div class="col-12 col-lg-5" id="section-add-post">
-            <section class="app-card h-100">
-              <div class="card-header-lite p-4">
+            <div class="tab-pane fade" id="pane-add-post" role="tabpanel" aria-labelledby="tab-add-post" tabindex="0">
+              <div class="card-header-lite p-0 pb-3 mb-3 bg-transparent">
                 <div class="d-flex align-items-center gap-2">
                   <i class="bi bi-pencil-square brand-text fs-5"></i>
                   <div>
@@ -477,44 +512,39 @@
                 </div>
               </div>
 
-              <div class="p-4">
-                <form method="POST" action="{{ route('admin.posts.store') }}" class="row g-3">
-                  @csrf
+              <form method="POST" action="{{ route('admin.posts.store') }}" class="row g-3">
+                @csrf
 
-                  <div class="col-12">
-                    <label class="form-label">عنوان نوشته</label>
-                    <input class="form-control rounded-4" name="title" value="{{ old('title') }}" required>
-                  </div>
+                <div class="col-12">
+                  <label class="form-label">عنوان نوشته</label>
+                  <input class="form-control rounded-4" name="title" value="{{ old('title') }}" required>
+                </div>
 
-                  <div class="col-12">
-                    <label class="form-label">دسته نوشته</label>
-                    <input class="form-control rounded-4" name="category" value="{{ old('category') }}" required>
-                  </div>
+                <div class="col-12">
+                  <label class="form-label">دسته نوشته</label>
+                  <input class="form-control rounded-4" name="category" value="{{ old('category') }}" required>
+                </div>
 
-                  <div class="col-12">
-                    <label class="form-label">خلاصه نوشته</label>
-                    <textarea class="form-control rounded-4" name="excerpt" rows="4" required>{{ old('excerpt') }}</textarea>
-                  </div>
+                <div class="col-12">
+                  <label class="form-label">خلاصه نوشته</label>
+                  <textarea class="form-control rounded-4" name="excerpt" rows="4" required>{{ old('excerpt') }}</textarea>
+                </div>
 
-                  <div class="col-12">
-                    <label class="form-label">آدرس تصویر</label>
-                    <input class="form-control rounded-4" name="image" value="{{ old('image') }}" required placeholder="https://...">
-                  </div>
+                <div class="col-12">
+                  <label class="form-label">آدرس تصویر</label>
+                  <input class="form-control rounded-4" name="image" value="{{ old('image') }}" required placeholder="https://...">
+                </div>
 
-                  <div class="col-12">
-                    <button class="btn btn-brand rounded-4" type="submit">
-                      <i class="bi bi-plus-circle me-1"></i> افزودن نوشته
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </section>
-          </div>
+                <div class="col-12">
+                  <button class="btn btn-brand rounded-4" type="submit">
+                    <i class="bi bi-plus-circle me-1"></i> افزودن نوشته
+                  </button>
+                </div>
+              </form>
+            </div>
 
-          <!-- Posts List -->
-          <div class="col-12 col-lg-7" id="section-posts">
-            <section class="app-card h-100">
-              <div class="card-header-lite p-4">
+            <div class="tab-pane fade" id="pane-posts" role="tabpanel" aria-labelledby="tab-posts" tabindex="0">
+              <div class="card-header-lite p-0 pb-3 mb-3 bg-transparent">
                 <div class="d-flex align-items-center gap-2">
                   <i class="bi bi-journal-text brand-text fs-5"></i>
                   <div>
@@ -571,14 +601,37 @@
                   </tbody>
                 </table>
               </div>
-            </section>
+            </div>
           </div>
-
-        </div><!-- /row -->
+        </section>
       </main>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.querySelectorAll('[data-admin-tab]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        const key = link.dataset.adminTab;
+        const trigger = document.querySelector(`#tab-${key}`);
+
+        if (!trigger) {
+          return;
+        }
+
+        bootstrap.Tab.getOrCreateInstance(trigger).show();
+
+        document.querySelectorAll('[data-admin-tab]').forEach((item) => {
+          item.classList.toggle('active', item.dataset.adminTab === key);
+        });
+
+        const offcanvasElement = link.closest('.offcanvas');
+        if (offcanvasElement) {
+          bootstrap.Offcanvas.getOrCreateInstance(offcanvasElement).hide();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
