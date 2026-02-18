@@ -16,8 +16,28 @@ class AdminController extends Controller
     {
         $products = $this->catalog->products();
         $categories = $this->catalog->categories();
+        $posts = $this->catalog->posts();
 
-        return view('admin.dashboard', compact('products', 'categories'));
+        return view('admin.dashboard', compact('products', 'categories', 'posts'));
+    }
+
+    public function storeProduct(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'brand' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'string', 'max:255'],
+            'image' => ['required', 'url'],
+            'price' => ['required', 'string', 'max:255'],
+            'old_price' => ['nullable', 'string', 'max:255'],
+            'badge' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'specs' => ['required', 'string'],
+        ]);
+
+        $this->catalog->createProduct($validated);
+
+        return back()->with('status', 'محصول جدید با موفقیت افزوده شد.');
     }
 
     public function updateCategories(Request $request): RedirectResponse
@@ -60,5 +80,49 @@ class AdminController extends Controller
         $this->catalog->updateProduct($slug, $validated);
 
         return redirect()->route('admin.index')->with('status', 'اطلاعات محصول با موفقیت بروزرسانی شد.');
+    }
+
+    public function storePost(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'string', 'max:255'],
+            'excerpt' => ['required', 'string'],
+            'image' => ['required', 'url'],
+        ]);
+
+        $this->catalog->createPost($validated);
+
+        return back()->with('status', 'نوشته جدید بلاگ با موفقیت افزوده شد.');
+    }
+
+    public function editPost(string $slug)
+    {
+        $post = $this->catalog->findPostBySlug($slug);
+
+        abort_unless($post, 404);
+
+        return view('admin.edit-post', compact('post'));
+    }
+
+    public function updatePost(Request $request, string $slug): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'string', 'max:255'],
+            'excerpt' => ['required', 'string'],
+            'image' => ['required', 'url'],
+        ]);
+
+        $this->catalog->updatePost($slug, $validated);
+
+        return redirect()->route('admin.index')->with('status', 'نوشته بلاگ با موفقیت بروزرسانی شد.');
+    }
+
+    public function destroyPost(string $slug): RedirectResponse
+    {
+        $this->catalog->deletePost($slug);
+
+        return back()->with('status', 'نوشته بلاگ با موفقیت حذف شد.');
     }
 }

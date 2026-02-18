@@ -438,45 +438,29 @@
         <h2 class="h5 section-title m-0">بلاگ موبوتک ✍️</h2>
         <div class="text-muted-2 small">راهنمای خرید، بررسی‌ها و نکات کاربردی</div>
       </div>
-      <a href="#" class="btn btn-outline-secondary btn-sm rounded-16 fw-semibold">مشاهده همه مقالات</a>
+      <a href="{{ route('admin.index') }}" class="btn btn-outline-secondary btn-sm rounded-16 fw-semibold">مدیریت مقالات</a>
     </div>
 
     <div class="row g-3">
-      <div class="col-12 col-md-4">
-        <div class="blog-card h-100">
-          <img class="blog-img w-100" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop" alt="مقاله ۱">
-          <div class="p-3">
-            <div class="text-muted-2 small">راهنمای خرید</div>
-            <div class="fw-black mt-1" style="font-weight:900">چطور بهترین گوشی برای نیازت انتخاب کنی؟</div>
-            <div class="text-muted-2 small mt-2">چند نکته مهم برای انتخاب درست قبل از خرید...</div>
-            <a href="#" class="btn btn-outline-primary btn-sm rounded-16 fw-semibold mt-3">ادامه مطلب</a>
+      @forelse($posts as $post)
+        <div class="col-12 col-md-4">
+          <div class="blog-card h-100">
+            <img class="blog-img w-100" src="{{ $post['image'] }}" alt="{{ $post['title'] }}">
+            <div class="p-3">
+              <div class="text-muted-2 small">{{ $post['category'] }}</div>
+              <div class="fw-black mt-1" style="font-weight:900">{{ $post['title'] }}</div>
+              <div class="text-muted-2 small mt-2">{{ $post['excerpt'] }}</div>
+              <a href="{{ route('admin.posts.edit', $post['slug']) }}" class="btn btn-outline-primary btn-sm rounded-16 fw-semibold mt-3">ویرایش در پنل</a>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <div class="blog-card h-100">
-          <img class="blog-img w-100" src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1200&auto=format&fit=crop" alt="مقاله ۲">
-          <div class="p-3">
-            <div class="text-muted-2 small">مقایسه</div>
-            <div class="fw-black mt-1" style="font-weight:900">مقایسه لپ‌تاپ گیمینگ و کاری؛ کدام بهتره؟</div>
-            <div class="text-muted-2 small mt-2">اگر بین دو مدل مردد هستی، این مقاله کمک می‌کنه...</div>
-            <a href="#" class="btn btn-outline-primary btn-sm rounded-16 fw-semibold mt-3">ادامه مطلب</a>
+      @empty
+        <div class="col-12">
+          <div class="alert alert-light border rounded-16 mb-0">
+            هنوز نوشته‌ای ثبت نشده است.
           </div>
         </div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <div class="blog-card h-100">
-          <img class="blog-img w-100" src="https://images.unsplash.com/photo-1518441902117-f0a0eec0d9d5?q=80&w=1200&auto=format&fit=crop" alt="مقاله ۳">
-          <div class="p-3">
-            <div class="text-muted-2 small">آموزشی</div>
-            <div class="fw-black mt-1" style="font-weight:900">چطور عمر باتری گوشی رو بیشتر کنیم؟</div>
-            <div class="text-muted-2 small mt-2">ترفندهای ساده ولی خیلی مؤثر برای باتری...</div>
-            <a href="#" class="btn btn-outline-primary btn-sm rounded-16 fw-semibold mt-3">ادامه مطلب</a>
-          </div>
-        </div>
-      </div>
+      @endforelse
     </div>
   </section>
 

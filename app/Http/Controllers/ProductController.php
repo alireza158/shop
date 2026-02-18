@@ -14,8 +14,9 @@ class ProductController extends Controller
     {
         $products = $this->catalog->products();
         $categories = $this->catalog->categories();
+        $posts = $this->catalog->posts();
 
-        return view('welcome', compact('products', 'categories'));
+        return view('welcome', compact('products', 'categories', 'posts'));
     }
 
     public function show(string $slug)
