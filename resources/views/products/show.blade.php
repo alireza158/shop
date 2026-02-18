@@ -12,169 +12,184 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <style>
-    /* Minimal custom styling on top of Bootstrap */
+    :root{
+      --primary:#ef394e;
+      --primary-dark:#d32f41;
+      --text:#333;
+      --muted:#666;
+      --border:#e8e8e8;
+      --bg:#fafafa;
+      --white:#fff;
+      --radius:14px;
+      --shadow:0 6px 24px rgba(0,0,0,.08);
+    }
+
+    *{ box-sizing:border-box; }
     body{
-      background: #f6f7fb;
+      margin:0;
+      font-family:IRANSans, Tahoma, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.9;
     }
-    .glass-nav{
-      background: rgba(255,255,255,.8);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(0,0,0,.06);
+
+    .container{ width:min(1100px, 92%); margin:auto; }
+
+    .header{
+      background:var(--white);
+      border-bottom:1px solid var(--border);
+      position:sticky;
+      top:0;
+      z-index:10;
     }
-    .product-media{
-      border-radius: 1rem;
-      overflow:hidden;
+
+    .header-inner{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px 0;
+      gap:12px;
+    }
+
+    .logo{ color:var(--primary); font-size:22px; font-weight:900; text-decoration:none; }
+
+    .btn{
+      border:1px solid var(--border);
+      border-radius:10px;
       background:#fff;
-      border: 1px solid rgba(0,0,0,.06);
-      box-shadow: 0 10px 25px rgba(0,0,0,.06);
+      padding:10px 14px;
+      text-decoration:none;
+      color:inherit;
+      display:inline-block;
+      font-weight:700;
     }
-    .product-media img{
-      width:100%;
-      height:auto;
-      display:block;
-      aspect-ratio: 4/3;
-      object-fit: cover;
+
+    .layout{
+      margin-top:24px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      align-items:start;
     }
-    .card-soft{
-      border: 1px solid rgba(0,0,0,.06);
-      box-shadow: 0 10px 25px rgba(0,0,0,.06);
-      border-radius: 1rem;
+
+    .card{
+      background:var(--white);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
     }
+
+    img{ width:100%; border-radius:12px; object-fit:cover; }
+
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      background:var(--primary);
+      color:#fff;
+      border-radius:8px;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:10px;
+    }
+
+    h1{ margin:0 0 6px; font-size:30px; line-height:1.4; }
+    .meta{ color:var(--muted); margin-bottom:12px; }
+
     .price{
-      font-weight: 900;
-      letter-spacing: -.3px;
+      color:var(--primary);
+      font-size:28px;
+      font-weight:900;
     }
-    .old-price{
-      color:#8a8f98;
-      text-decoration: line-through;
-      font-weight: 700;
-      font-size: .9rem;
+
+    .old{
+      color:#8e8e8e;
+      text-decoration:line-through;
+      font-size:14px;
+      margin-right:8px;
     }
-    .section-title{
-      font-weight: 900;
-      letter-spacing: -.3px;
+
+    ul{ margin:0; padding-right:18px; }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:18px;
+    }
+
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+      border-color:transparent;
+    }
+
+    .btn-primary:hover{ background:var(--primary-dark); }
+
+    .related{
+      margin-top:30px;
+    }
+
+    .related-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      gap:14px;
+    }
+
+    .related-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      text-decoration:none;
+      color:inherit;
+    }
+
+    .related-card h3{ font-size:15px; margin:10px 0 6px; }
+    .related-card p{ margin:0; color:var(--primary-dark); font-weight:800; }
+
+    @media (max-width: 900px){
+      .layout{ grid-template-columns:1fr; }
     }
   </style>
 </head>
 
 <body>
-
-  <!-- Top Nav -->
-  <nav class="navbar glass-nav sticky-top">
-    <div class="container py-2">
-      <a class="navbar-brand fw-black text-danger d-flex align-items-center gap-2" href="{{ route('home') }}">
-        <span class="fw-bold">موبوتک</span>
-      </a>
-
-      <a href="{{ route('home') }}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
-        <i class="bi bi-arrow-right"></i>
-        بازگشت
-      </a>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="{{ route('home') }}" class="logo">موبوتک</a>
+      <a href="{{ route('home') }}" class="btn">← بازگشت به لیست محصولات</a>
     </div>
   </nav>
 
-  <main class="container my-4 my-lg-5">
+  <main class="container">
+    <section class="layout">
+      <article class="card">
+        <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" />
+      </article>
 
-    <!-- Breadcrumb (optional) -->
-    <nav aria-label="breadcrumb" class="mb-3">
-      <ol class="breadcrumb mb-0 small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" href="{{ route('home') }}">خانه</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ $product['name'] }}</li>
-      </ol>
-    </nav>
+      <article class="card">
+        <span class="badge">{{ $product['badge'] }}</span>
+        <h1>{{ $product['name'] }}</h1>
+        <p class="meta">برند {{ $product['brand'] }} | دسته‌بندی: {{ $product['category'] }}</p>
 
-    <!-- Product -->
-    <div class="row g-4 align-items-start">
+        <p class="price">{{ $product['price'] }} تومان <span class="old">{{ $product['old_price'] }}</span></p>
 
-      <!-- Image -->
-      <div class="col-12 col-lg-6">
-        <div class="product-media">
-          <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
+        <p>{{ $product['description'] }}</p>
+
+        <h3>مشخصات کلیدی</h3>
+        <ul>
+          @foreach($product['specs'] as $spec)
+            <li>{{ $spec }}</li>
+          @endforeach
+        </ul>
+
+        <div class="actions">
+          <button class="btn btn-primary">افزودن به سبد خرید</button>
+          <button class="btn">مقایسه محصول</button>
         </div>
-
-        <!-- Small info row -->
-        <div class="d-flex flex-wrap gap-2 mt-3">
-          <span class="badge text-bg-light border rounded-pill px-3 py-2">
-            <i class="bi bi-shield-check"></i>
-            ضمانت اصالت
-          </span>
-          <span class="badge text-bg-light border rounded-pill px-3 py-2">
-            <i class="bi bi-truck"></i>
-            ارسال سریع
-          </span>
-          <span class="badge text-bg-light border rounded-pill px-3 py-2">
-            <i class="bi bi-arrow-repeat"></i>
-            ۷ روز بازگشت
-          </span>
-        </div>
-      </div>
-
-      <!-- Details -->
-      <div class="col-12 col-lg-6">
-        <div class="card card-soft">
-          <div class="card-body p-4 p-lg-4">
-
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-              @if(!empty($product['badge']))
-                <span class="badge text-bg-danger rounded-pill px-3 py-2">{{ $product['badge'] }}</span>
-              @endif
-              <span class="badge text-bg-light border rounded-pill px-3 py-2">
-                برند: {{ $product['brand'] }}
-              </span>
-              <span class="badge text-bg-light border rounded-pill px-3 py-2">
-                دسته: {{ $product['category'] }}
-              </span>
-            </div>
-
-            <h1 class="h4 h3-lg fw-black mb-3 section-title">{{ $product['name'] }}</h1>
-
-            <!-- Price -->
-            <div class="d-flex align-items-baseline gap-3 mb-3">
-              <div class="h3 text-danger mb-0 price">
-                {{ $product['price'] }} <span class="fs-6 fw-bold text-muted">تومان</span>
-              </div>
-
-              @if(!empty($product['old_price']))
-                <div class="old-price">{{ $product['old_price'] }} تومان</div>
-              @endif
-            </div>
-
-            <!-- Description -->
-            <p class="text-secondary mb-4" style="line-height:2;">
-              {{ $product['description'] }}
-            </p>
-
-            <!-- Specs -->
-            <div class="mb-4">
-              <div class="fw-bold mb-2">مشخصات کلیدی</div>
-              <div class="d-flex flex-wrap gap-2">
-                @foreach($product['specs'] as $spec)
-                  <span class="badge text-bg-light border rounded-pill px-3 py-2">{{ $spec }}</span>
-                @endforeach
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="d-grid d-sm-flex gap-2">
-              <button class="btn btn-danger rounded-pill px-4 py-2 fw-bold">
-                <i class="bi bi-bag-plus"></i>
-                افزودن به سبد خرید
-              </button>
-              <button class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold">
-                <i class="bi bi-bar-chart"></i>
-                مقایسه
-              </button>
-              <button class="btn btn-light border rounded-pill px-4 py-2 fw-bold">
-                <i class="bi bi-heart"></i>
-                علاقه‌مندی
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-    </div>
+      </article>
+    </section>
 
     <!-- Related Products -->
     <section class="mt-5">
