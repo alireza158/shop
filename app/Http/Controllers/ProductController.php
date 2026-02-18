@@ -2,28 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\CatalogRepository;
+
 class ProductController extends Controller
 {
+    public function __construct(private readonly CatalogRepository $catalog)
+    {
+    }
+
     public function index()
     {
-        $products = config('products.items', []);
+        $products = $this->catalog->products();
+        $categories = $this->catalog->categories();
 
-        return view('welcome', compact('products'));
+        return view('welcome', compact('products', 'categories'));
     }
 
     public function show(string $slug)
     {
-        $products = collect(config('products.items', []));
-
-        $product = $products->firstWhere('slug', $slug);
+        $product = $this->catalog->findProductBySlug($slug);
 
         abort_unless($product, 404);
 
-        $relatedProducts = $products
-            ->where('slug', '!=', $slug)
-            ->take(3)
-            ->values();
+        $relatedProducts = $this->catalog->relatedProducts($slug);
+        $categories = $this->catalog->categories();
 
-        return view('products.show', compact('product', 'relatedProducts'));
+        return view('products.show', compact('product', 'relatedProducts', 'categories'));
     }
 }
