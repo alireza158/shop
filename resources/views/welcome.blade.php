@@ -162,6 +162,14 @@
       box-shadow:0 4px 12px rgba(0,0,0,.12);
     }
 
+    .card-link{ display:block; }
+
+    .card-link:focus-visible{
+      outline:2px solid var(--primary);
+      outline-offset:4px;
+      border-radius:var(--radius);
+    }
+
     .card h3{
       font-size:15px;
       margin-top:8px;
@@ -189,6 +197,14 @@
       font-weight:700;
       display:inline-block;
       margin-bottom:6px;
+    }
+
+    .view-product{
+      display:inline-block;
+      margin-top:10px;
+      font-size:13px;
+      color:var(--primary-dark);
+      font-weight:700;
     }
 
     /* ------------------ Features ------------------ */
@@ -391,33 +407,17 @@
       </div>
 
       <section class="cards">
-        <article class="card">
-          <img src="https://picsum.photos/seed/product-1/600/400" alt="محصول ۱" />
-          <span class="badge">۱۵٪ تخفیف</span>
-          <h3>iPhone 15 Pro Max 256GB</h3>
-          <p class="price">۹۱,۵۰۰,۰۰۰ تومان <span class="old">۱۰۷,۰۰۰,۰۰۰</span></p>
-        </article>
-
-        <article class="card">
-          <img src="https://picsum.photos/seed/product-2/600/400" alt="محصول ۲" />
-          <span class="badge" style="background: linear-gradient(135deg, var(--warning), rgba(245,158,11,.75)); box-shadow: 0 12px 24px rgba(245,158,11,.22);">پیشنهاد ویژه</span>
-          <h3>Samsung Galaxy S24 Ultra</h3>
-          <p class="price">۷۳,۹۰۰,۰۰۰ تومان <span class="old">۸۰,۰۰۰,۰۰۰</span></p>
-        </article>
-
-        <article class="card">
-          <img src="https://picsum.photos/seed/product-3/600/400" alt="محصول ۳" />
-          <span class="badge" style="background: linear-gradient(135deg, var(--primary2), rgba(14,165,233,.70)); box-shadow: 0 12px 24px rgba(14,165,233,.22);">جدید</span>
-          <h3>MacBook Air M3 13"</h3>
-          <p class="price">۶۶,۴۰۰,۰۰۰ تومان <span class="old">۷۱,۰۰۰,۰۰۰</span></p>
-        </article>
-
-        <article class="card">
-          <img src="https://picsum.photos/seed/product-4/600/400" alt="محصول ۴" />
-          <span class="badge" style="background: linear-gradient(135deg, #6366f1, rgba(167,139,250,.75)); box-shadow: 0 12px 24px rgba(99,102,241,.22);">محبوب</span>
-          <h3>ASUS TUF Gaming F15</h3>
-          <p class="price">۵۴,۸۰۰,۰۰۰ تومان <span class="old">۵۹,۲۰۰,۰۰۰</span></p>
-        </article>
+        @foreach($products as $product)
+          <a href="{{ route('products.show', $product['slug']) }}" class="card-link" aria-label="مشاهده {{ $product['name'] }}">
+            <article class="card">
+              <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" />
+              <span class="badge">{{ $product['badge'] }}</span>
+              <h3>{{ $product['name'] }}</h3>
+              <p class="price">{{ $product['price'] }} تومان <span class="old">{{ $product['old_price'] }}</span></p>
+              <span class="view-product">مشاهده جزئیات محصول ←</span>
+            </article>
+          </a>
+        @endforeach
       </section>
 
       <div class="section-title">
