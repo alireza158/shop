@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -90,4 +91,52 @@ class AdminCatalogTest extends TestCase
 
         Storage::disk('public')->assertExists(str_replace('/storage/', '', $product->image));
     }
+
+    public function test_admin_can_create_post_in_database(): void
+    {
+        $response = $this->post('/admin/posts', [
+            'title' => 'پست تستی',
+            'category' => 'آموزشی',
+            'excerpt' => 'خلاصه تست',
+            'image' => 'https://example.com/post.jpg',
+        ]);
+
+        $response->assertRedirect();
+
+        $post = Post::query()->where('title', 'پست تستی')->first();
+
+        $this->assertNotNull($post);
+        $this->assertNotSame('', $post->slug);
+    }
+
+    public function test_admin_can_update_post_in_database(): void
+    {
+        $post = Post::query()->create([
+            'slug' => 'old-post',
+            'title' => 'Old Post',
+            'category' => 'مقایسه',
+            'excerpt' => 'Old excerpt',
+            'image' => 'https://example.com/old.jpg',
+        ]);
+
+        $response = $this->put('/admin/posts/'.$post->slug, [
+            'title' => 'Updated Post',
+            'category' => 'راهنمای خرید',
+            'excerpt' => 'Updated excerpt',
+            'image' => 'https://example.com/new.jpg',
+        ]);
+
+        $response->assertRedirect('/admin');
+
+        $this->assertDatabaseHas('posts', [
+            'slug' => 'updated-post',
+            'title' => 'Updated Post',
+            'category' => 'راهنمای خرید',
+        ]);
+
+        $this->assertDatabaseMissing('posts', [
+            'slug' => 'old-post',
+        ]);
+    }
+
 }
