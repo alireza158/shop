@@ -2,16 +2,20 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminCatalogTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        Storage::fake();
+        Storage::fake('public');
     }
 
     public function test_admin_dashboard_is_accessible(): void
@@ -30,11 +34,9 @@ class AdminCatalogTest extends TestCase
 
         $response->assertRedirect('/admin');
 
-        Storage::assertExists('catalog/categories.json');
-
-        $savedCategories = json_decode(Storage::get('catalog/categories.json'), true);
-
-        $this->assertSame(['موبایل', 'لپ‌تاپ'], $savedCategories);
+        $this->assertDatabaseHas('categories', ['name' => 'موبایل']);
+        $this->assertDatabaseHas('categories', ['name' => 'لپ‌تاپ']);
+        $this->assertDatabaseCount('categories', 2);
     }
 
     public function test_admin_can_update_product(): void
@@ -57,12 +59,35 @@ class AdminCatalogTest extends TestCase
 
         $response->assertRedirect('/admin');
 
-        $products = collect(json_decode(Storage::get('catalog/products.json'), true));
+        $this->assertDatabaseHas('products', [
+            'name' => 'iPhone 15 Pro Max New',
+            'slug' => 'iphone-15-pro-max-new',
+        ]);
+    }
 
-        $updated = $products->firstWhere('name', 'iPhone 15 Pro Max New');
+    public function test_admin_can_create_product_with_uploaded_image(): void
+    {
+        $file = UploadedFile::fake()->image('phone.jpg');
 
-        $this->assertNotNull($updated);
-        $this->assertSame('iphone-15-pro-max-new', $updated['slug']);
-        $this->assertSame(['مشخصه ۱', 'مشخصه ۲'], $updated['specs']);
+        $response = $this->post('/admin/products', [
+            'name' => 'Test Phone',
+            'brand' => 'Test Brand',
+            'category' => 'تست',
+            'image_file' => $file,
+            'price' => '۱۰۰۰',
+            'old_price' => '۱۲۰۰',
+            'badge' => 'جدید',
+            'description' => 'توضیح تست',
+            'specs' => "اول\nدوم",
+        ]);
+
+        $response->assertRedirect();
+
+        $product = \App\Models\Product::query()->where('name', 'Test Phone')->first();
+
+        $this->assertNotNull($product);
+        $this->assertStringStartsWith('/storage/products/', $product->image);
+
+        Storage::disk('public')->assertExists(str_replace('/storage/', '', $product->image));
     }
 }

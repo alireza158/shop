@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Support\CatalogRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -27,13 +28,16 @@ class AdminController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'brand' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
-            'image' => ['required', 'url'],
+            'image' => ['nullable', 'url', 'required_without:image_file'],
+            'image_file' => ['nullable', 'image', 'max:5120', 'required_without:image'],
             'price' => ['required', 'string', 'max:255'],
             'old_price' => ['nullable', 'string', 'max:255'],
             'badge' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'specs' => ['required', 'string'],
         ]);
+
+        $validated['image'] = $this->resolveProductImage($request, $validated['image'] ?? null);
 
         $this->catalog->createProduct($validated);
 
@@ -69,13 +73,17 @@ class AdminController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'brand' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
-            'image' => ['required', 'url'],
+            'image' => ['nullable', 'url'],
+            'image_file' => ['nullable', 'image', 'max:5120'],
             'price' => ['required', 'string', 'max:255'],
-            'old_price' => ['required', 'string', 'max:255'],
+            'old_price' => ['nullable', 'string', 'max:255'],
             'badge' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'specs' => ['required', 'string'],
         ]);
+
+        $currentProduct = $this->catalog->findProductBySlug($slug);
+        $validated['image'] = $this->resolveProductImage($request, $validated['image'] ?? null, $currentProduct['image'] ?? null);
 
         $this->catalog->updateProduct($slug, $validated);
 
@@ -124,5 +132,24 @@ class AdminController extends Controller
         $this->catalog->deletePost($slug);
 
         return back()->with('status', 'نوشته بلاگ با موفقیت حذف شد.');
+    }
+
+    private function resolveProductImage(Request $request, ?string $imageUrl, ?string $currentImage = null): string
+    {
+        if ($request->hasFile('image_file')) {
+            $path = $request->file('image_file')->store('products', 'public');
+
+            if ($currentImage && str_starts_with($currentImage, '/storage/')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $currentImage));
+            }
+
+            return Storage::url($path);
+        }
+
+        if (is_string($imageUrl) && trim($imageUrl) !== '') {
+            return trim($imageUrl);
+        }
+
+        return $currentImage ?? '';
     }
 }

@@ -36,7 +36,7 @@
       <div class="card-body p-4 p-md-5">
         <h1 class="h5 fw-bold mb-4">{{ $product['name'] }}</h1>
 
-        <form method="POST" action="{{ route('admin.products.update', $product['slug']) }}" class="row g-3">
+        <form method="POST" action="{{ route('admin.products.update', $product['slug']) }}" class="row g-3" enctype="multipart/form-data">
           @csrf
           @method('PUT')
 
@@ -75,8 +75,13 @@
           </div>
 
           <div class="col-12">
-            <label class="form-label">آدرس تصویر</label>
-            <input class="form-control" name="image" value="{{ old('image', $product['image']) }}" required>
+            <label class="form-label">آدرس تصویر (اختیاری)</label>
+            <input class="form-control" name="image" value="{{ old('image', $product['image']) }}">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">آپلود تصویر جدید (اختیاری)</label>
+            <input type="file" class="form-control" name="image_file" accept="image/*">
           </div>
 
           <div class="col-12">
