@@ -2,30 +2,27 @@
 
 namespace App\Support;
 
+use App\Models\Category;
+use App\Models\Post;
+use App\Models\Product;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CatalogRepository
 {
-    private string $productsPath = 'catalog/products.json';
-
-    private string $categoriesPath = 'catalog/categories.json';
-
-    private string $postsPath = 'catalog/posts.json';
-
     /**
      * @return array<int, array<string, mixed>>
      */
     public function products(): array
     {
-        if (! Storage::exists($this->productsPath)) {
-            $this->seedProducts();
-        }
+        $this->seedProductsIfNeeded();
 
-        $products = json_decode(Storage::get($this->productsPath), true);
-
-        return is_array($products) ? $products : [];
+        return Product::query()
+            ->with('category')
+            ->latest('id')
+            ->get()
+            ->map(fn (Product $product) => $this->mapProduct($product))
+            ->all();
     }
 
     /**
@@ -33,15 +30,11 @@ class CatalogRepository
      */
     public function categories(): array
     {
-        if (! Storage::exists($this->categoriesPath)) {
-            $this->seedCategories();
-        }
+        $this->seedProductsIfNeeded();
 
-        $categories = json_decode(Storage::get($this->categoriesPath), true);
-
-        return collect(is_array($categories) ? $categories : [])
-            ->filter(fn ($category) => is_string($category) && $category !== '')
-            ->values()
+        return Category::query()
+            ->orderBy('name')
+            ->pluck('name')
             ->all();
     }
 
@@ -54,10 +47,13 @@ class CatalogRepository
             ->map(fn ($category) => trim((string) $category))
             ->filter()
             ->unique()
-            ->values()
-            ->all();
+            ->values();
 
-        Storage::put($this->categoriesPath, json_encode($cleaned, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        Category::query()->whereNotIn('name', $cleaned->all())->delete();
+
+        $cleaned->each(function (string $name): void {
+            Category::query()->firstOrCreate(['name' => $name]);
+        });
     }
 
     /**
@@ -65,15 +61,12 @@ class CatalogRepository
      */
     public function posts(): array
     {
-        if (! Storage::exists($this->postsPath)) {
-            $this->seedPosts();
-        }
+        $this->seedPostsIfNeeded();
 
-        $posts = json_decode(Storage::get($this->postsPath), true);
-
-        return collect(is_array($posts) ? $posts : [])
-            ->filter(fn ($post) => is_array($post) && ! empty($post['title']))
-            ->values()
+        return Post::query()
+            ->latest('id')
+            ->get()
+            ->map(fn (Post $post) => $this->mapPost($post))
             ->all();
     }
 
@@ -82,27 +75,27 @@ class CatalogRepository
      */
     public function createProduct(array $payload): void
     {
-        $name = trim((string) $payload['name']);
-        $products = $this->products();
+        $this->seedProductsIfNeeded();
 
+        $name = trim((string) $payload['name']);
         $baseSlug = Str::slug($name);
-        $existingSlugs = collect($products)->pluck('slug')->filter()->all();
+        $existingSlugs = Product::query()->pluck('slug')->all();
         $slug = $this->generateUniqueSlug($baseSlug, $existingSlugs);
 
-        $products[] = [
+        $category = $this->resolveCategory((string) $payload['category']);
+
+        Product::query()->create([
             'slug' => $slug,
             'name' => $name,
             'brand' => trim((string) $payload['brand']),
-            'category' => trim((string) $payload['category']),
+            'category_id' => $category?->id,
             'image' => trim((string) $payload['image']),
             'price' => trim((string) $payload['price']),
             'old_price' => trim((string) ($payload['old_price'] ?? '')),
             'badge' => trim((string) $payload['badge']),
             'description' => trim((string) $payload['description']),
             'specs' => $this->normalizeSpecs((string) $payload['specs']),
-        ];
-
-        Storage::put($this->productsPath, json_encode($products, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        ]);
     }
 
     /**
@@ -110,7 +103,11 @@ class CatalogRepository
      */
     public function findProductBySlug(string $slug): ?array
     {
-        return collect($this->products())->firstWhere('slug', $slug);
+        $this->seedProductsIfNeeded();
+
+        $product = Product::query()->with('category')->where('slug', $slug)->first();
+
+        return $product ? $this->mapProduct($product) : null;
     }
 
     /**
@@ -118,32 +115,32 @@ class CatalogRepository
      */
     public function updateProduct(string $slug, array $payload): void
     {
-        $products = collect($this->products())
-            ->map(function ($product) use ($slug, $payload) {
-                if (($product['slug'] ?? null) !== $slug) {
-                    return $product;
-                }
+        $this->seedProductsIfNeeded();
 
-                $name = trim((string) $payload['name']);
+        $product = Product::query()->where('slug', $slug)->first();
 
-                return [
-                    ...$product,
-                    'name' => $name,
-                    'slug' => Str::slug($name),
-                    'brand' => trim((string) $payload['brand']),
-                    'category' => trim((string) $payload['category']),
-                    'image' => trim((string) $payload['image']),
-                    'price' => trim((string) $payload['price']),
-                    'old_price' => trim((string) $payload['old_price']),
-                    'badge' => trim((string) $payload['badge']),
-                    'description' => trim((string) $payload['description']),
-                    'specs' => $this->normalizeSpecs((string) $payload['specs']),
-                ];
-            })
-            ->values()
-            ->all();
+        if (! $product) {
+            return;
+        }
 
-        Storage::put($this->productsPath, json_encode($products, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        $name = trim((string) $payload['name']);
+        $baseSlug = Str::slug($name);
+        $existingSlugs = Product::query()->where('slug', '!=', $slug)->pluck('slug')->all();
+        $newSlug = $this->generateUniqueSlug($baseSlug, $existingSlugs);
+        $category = $this->resolveCategory((string) $payload['category']);
+
+        $product->update([
+            'name' => $name,
+            'slug' => $newSlug,
+            'brand' => trim((string) $payload['brand']),
+            'category_id' => $category?->id,
+            'image' => trim((string) $payload['image']),
+            'price' => trim((string) $payload['price']),
+            'old_price' => trim((string) ($payload['old_price'] ?? '')),
+            'badge' => trim((string) $payload['badge']),
+            'description' => trim((string) $payload['description']),
+            'specs' => $this->normalizeSpecs((string) $payload['specs']),
+        ]);
     }
 
     /**
@@ -151,10 +148,15 @@ class CatalogRepository
      */
     public function relatedProducts(string $slug, int $limit = 3): Collection
     {
-        return collect($this->products())
+        $this->seedProductsIfNeeded();
+
+        return Product::query()
+            ->with('category')
             ->where('slug', '!=', $slug)
+            ->latest('id')
             ->take($limit)
-            ->values();
+            ->get()
+            ->map(fn (Product $product) => $this->mapProduct($product));
     }
 
     /**
@@ -162,100 +164,101 @@ class CatalogRepository
      */
     public function findPostBySlug(string $slug): ?array
     {
-        return collect($this->posts())->firstWhere('slug', $slug);
+        $this->seedPostsIfNeeded();
+
+        $post = Post::query()->where('slug', $slug)->first();
+
+        return $post ? $this->mapPost($post) : null;
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
+    /** @param array<string, mixed> $payload */
     public function createPost(array $payload): void
     {
-        $posts = $this->posts();
-        $title = trim((string) $payload['title']);
+        $this->seedPostsIfNeeded();
 
+        $title = trim((string) $payload['title']);
         $baseSlug = Str::slug($title);
-        $existingSlugs = collect($posts)->pluck('slug')->filter()->all();
+        $existingSlugs = Post::query()->pluck('slug')->all();
         $slug = $this->generateUniqueSlug($baseSlug, $existingSlugs);
 
-        $posts[] = [
+        Post::query()->create([
             'slug' => $slug,
             'title' => $title,
             'category' => trim((string) $payload['category']),
             'excerpt' => trim((string) $payload['excerpt']),
             'image' => trim((string) $payload['image']),
-        ];
-
-        Storage::put($this->postsPath, json_encode($posts, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        ]);
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
+    /** @param array<string, mixed> $payload */
     public function updatePost(string $slug, array $payload): void
     {
-        $posts = collect($this->posts());
+        $post = Post::query()->where('slug', $slug)->first();
+
+        if (! $post) {
+            return;
+        }
+
         $title = trim((string) $payload['title']);
         $baseSlug = Str::slug($title);
-        $existingSlugs = $posts->where('slug', '!=', $slug)->pluck('slug')->filter()->all();
+        $existingSlugs = Post::query()->where('slug', '!=', $slug)->pluck('slug')->all();
         $newSlug = $this->generateUniqueSlug($baseSlug, $existingSlugs);
 
-        $updatedPosts = $posts
-            ->map(function ($post) use ($slug, $payload, $title, $newSlug) {
-                if (($post['slug'] ?? null) !== $slug) {
-                    return $post;
-                }
-
-                return [
-                    ...$post,
-                    'slug' => $newSlug,
-                    'title' => $title,
-                    'category' => trim((string) $payload['category']),
-                    'excerpt' => trim((string) $payload['excerpt']),
-                    'image' => trim((string) $payload['image']),
-                ];
-            })
-            ->values()
-            ->all();
-
-        Storage::put($this->postsPath, json_encode($updatedPosts, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        $post->update([
+            'slug' => $newSlug,
+            'title' => $title,
+            'category' => trim((string) $payload['category']),
+            'excerpt' => trim((string) $payload['excerpt']),
+            'image' => trim((string) $payload['image']),
+        ]);
     }
 
     public function deletePost(string $slug): void
     {
-        $posts = collect($this->posts())
-            ->reject(fn ($post) => ($post['slug'] ?? null) === $slug)
-            ->values()
-            ->all();
-
-        Storage::put($this->postsPath, json_encode($posts, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        Post::query()->where('slug', $slug)->delete();
     }
 
-    private function seedProducts(): void
+    private function seedProductsIfNeeded(): void
     {
-        Storage::put(
-            $this->productsPath,
-            json_encode(config('products.items', []), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
-        );
+        if (Product::query()->exists()) {
+            return;
+        }
+
+        collect(config('products.items', []))->each(function (array $item): void {
+            $category = $this->resolveCategory((string) ($item['category'] ?? ''));
+
+            Product::query()->create([
+                'slug' => (string) ($item['slug'] ?? Str::slug((string) ($item['name'] ?? 'item'))),
+                'name' => (string) ($item['name'] ?? ''),
+                'brand' => (string) ($item['brand'] ?? ''),
+                'category_id' => $category?->id,
+                'image' => (string) ($item['image'] ?? ''),
+                'price' => (string) ($item['price'] ?? ''),
+                'old_price' => (string) ($item['old_price'] ?? ''),
+                'badge' => (string) ($item['badge'] ?? ''),
+                'description' => (string) ($item['description'] ?? ''),
+                'specs' => collect($item['specs'] ?? [])->filter()->values()->all(),
+            ]);
+        });
     }
 
-    private function seedCategories(): void
+    private function seedPostsIfNeeded(): void
     {
-        $categories = collect(config('products.items', []))
-            ->pluck('category')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        if (Post::query()->exists()) {
+            return;
+        }
 
-        Storage::put($this->categoriesPath, json_encode($categories, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-    }
+        collect(config('blog.posts', []))->each(function (array $item): void {
+            $title = trim((string) ($item['title'] ?? ''));
 
-    private function seedPosts(): void
-    {
-        Storage::put(
-            $this->postsPath,
-            json_encode(config('blog.posts', []), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
-        );
+            Post::query()->create([
+                'slug' => (string) ($item['slug'] ?? Str::slug($title !== '' ? $title : 'post')),
+                'title' => $title,
+                'category' => trim((string) ($item['category'] ?? '')),
+                'excerpt' => trim((string) ($item['excerpt'] ?? '')),
+                'image' => trim((string) ($item['image'] ?? '')),
+            ]);
+        });
     }
 
     /**
@@ -270,9 +273,7 @@ class CatalogRepository
             ->all();
     }
 
-    /**
-     * @param array<int, mixed> $existingSlugs
-     */
+    /** @param array<int, mixed> $existingSlugs */
     private function generateUniqueSlug(string $baseSlug, array $existingSlugs): string
     {
         $normalizedBase = $baseSlug !== '' ? $baseSlug : 'item';
@@ -285,5 +286,49 @@ class CatalogRepository
         }
 
         return $slug;
+    }
+
+    private function resolveCategory(string $name): ?Category
+    {
+        $cleanedName = trim($name);
+
+        if ($cleanedName === '') {
+            return null;
+        }
+
+        return Category::query()->firstOrCreate(['name' => $cleanedName]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapProduct(Product $product): array
+    {
+        return [
+            'slug' => $product->slug,
+            'name' => $product->name,
+            'brand' => $product->brand,
+            'category' => $product->category?->name ?? '',
+            'image' => $product->image,
+            'price' => $product->price,
+            'old_price' => $product->old_price ?? '',
+            'badge' => $product->badge,
+            'description' => $product->description,
+            'specs' => collect($product->specs)->filter()->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function mapPost(Post $post): array
+    {
+        return [
+            'slug' => $post->slug,
+            'title' => $post->title,
+            'category' => $post->category,
+            'excerpt' => $post->excerpt,
+            'image' => $post->image,
+        ];
     }
 }

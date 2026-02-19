@@ -2,16 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Models\Post;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminCatalogTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        Storage::fake();
+        Storage::fake('public');
     }
 
     public function test_admin_dashboard_is_accessible(): void
@@ -30,11 +35,9 @@ class AdminCatalogTest extends TestCase
 
         $response->assertRedirect('/admin');
 
-        Storage::assertExists('catalog/categories.json');
-
-        $savedCategories = json_decode(Storage::get('catalog/categories.json'), true);
-
-        $this->assertSame(['موبایل', 'لپ‌تاپ'], $savedCategories);
+        $this->assertDatabaseHas('categories', ['name' => 'موبایل']);
+        $this->assertDatabaseHas('categories', ['name' => 'لپ‌تاپ']);
+        $this->assertDatabaseCount('categories', 2);
     }
 
     public function test_admin_can_update_product(): void
@@ -57,12 +60,83 @@ class AdminCatalogTest extends TestCase
 
         $response->assertRedirect('/admin');
 
-        $products = collect(json_decode(Storage::get('catalog/products.json'), true));
-
-        $updated = $products->firstWhere('name', 'iPhone 15 Pro Max New');
-
-        $this->assertNotNull($updated);
-        $this->assertSame('iphone-15-pro-max-new', $updated['slug']);
-        $this->assertSame(['مشخصه ۱', 'مشخصه ۲'], $updated['specs']);
+        $this->assertDatabaseHas('products', [
+            'name' => 'iPhone 15 Pro Max New',
+            'slug' => 'iphone-15-pro-max-new',
+        ]);
     }
+
+    public function test_admin_can_create_product_with_uploaded_image(): void
+    {
+        $file = UploadedFile::fake()->image('phone.jpg');
+
+        $response = $this->post('/admin/products', [
+            'name' => 'Test Phone',
+            'brand' => 'Test Brand',
+            'category' => 'تست',
+            'image_file' => $file,
+            'price' => '۱۰۰۰',
+            'old_price' => '۱۲۰۰',
+            'badge' => 'جدید',
+            'description' => 'توضیح تست',
+            'specs' => "اول\nدوم",
+        ]);
+
+        $response->assertRedirect();
+
+        $product = \App\Models\Product::query()->where('name', 'Test Phone')->first();
+
+        $this->assertNotNull($product);
+        $this->assertStringStartsWith('/storage/products/', $product->image);
+
+        Storage::disk('public')->assertExists(str_replace('/storage/', '', $product->image));
+    }
+
+    public function test_admin_can_create_post_in_database(): void
+    {
+        $response = $this->post('/admin/posts', [
+            'title' => 'پست تستی',
+            'category' => 'آموزشی',
+            'excerpt' => 'خلاصه تست',
+            'image' => 'https://example.com/post.jpg',
+        ]);
+
+        $response->assertRedirect();
+
+        $post = Post::query()->where('title', 'پست تستی')->first();
+
+        $this->assertNotNull($post);
+        $this->assertNotSame('', $post->slug);
+    }
+
+    public function test_admin_can_update_post_in_database(): void
+    {
+        $post = Post::query()->create([
+            'slug' => 'old-post',
+            'title' => 'Old Post',
+            'category' => 'مقایسه',
+            'excerpt' => 'Old excerpt',
+            'image' => 'https://example.com/old.jpg',
+        ]);
+
+        $response = $this->put('/admin/posts/'.$post->slug, [
+            'title' => 'Updated Post',
+            'category' => 'راهنمای خرید',
+            'excerpt' => 'Updated excerpt',
+            'image' => 'https://example.com/new.jpg',
+        ]);
+
+        $response->assertRedirect('/admin');
+
+        $this->assertDatabaseHas('posts', [
+            'slug' => 'updated-post',
+            'title' => 'Updated Post',
+            'category' => 'راهنمای خرید',
+        ]);
+
+        $this->assertDatabaseMissing('posts', [
+            'slug' => 'old-post',
+        ]);
+    }
+
 }
