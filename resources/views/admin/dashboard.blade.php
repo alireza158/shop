@@ -379,7 +379,7 @@
                 </div>
               </div>
 
-              <form method="POST" action="{{ route('admin.products.store') }}" class="row g-3">
+              <form method="POST" action="{{ route('admin.products.store') }}" class="row g-3" enctype="multipart/form-data">
                 @csrf
 
                 <div class="col-12 col-md-6">
@@ -418,8 +418,12 @@
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label">آدرس تصویر</label>
-                  <input class="form-control rounded-4" name="image" value="{{ old('image') }}" required placeholder="https://...">
+                  <label class="form-label">آدرس تصویر (اختیاری)</label>
+                  <input class="form-control rounded-4" name="image" value="{{ old('image') }}" placeholder="https://...">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">آپلود تصویر محصول</label>
+                  <input type="file" class="form-control rounded-4" name="image_file" accept="image/*">
                 </div>
 
                 <div class="col-12">
